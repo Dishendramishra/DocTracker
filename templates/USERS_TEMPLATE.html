@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <a href="{{ url_for('index') }}" class="text-blue-100 hover:text-white">&larr; Back to Documents</a>
+            <h1 class="text-2xl font-bold mt-2">👥 User Management</h1>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Add User Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">➕ Add New User</h2>
+            <form method="POST" action="{{ url_for('add_user') }}" class="grid md:grid-cols-4 gap-4">
+                <input type="text" name="username" required placeholder="Username"
+                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <input type="password" name="password" required placeholder="Password"
+                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <input type="text" name="department" placeholder="Department"
+                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <select name="role" required
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button type="submit" class="md:col-span-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                    Create User
+                </button>
+            </form>
+        </div>
+
+        <!-- Users List -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Users ({{ users|length }})</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b-2 border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Username</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Department</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Documents</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Created</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for user in users %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ user.username }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 {% if user.role == 'admin' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %} rounded-full text-xs font-medium">
+                                    {{ user.role }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ user.department or 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ user.documents|length }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                {% if user.id != current_user.id %}
+                                <a href="{{ url_for('delete_user', user_id=user.id) }}"
+                                   onclick="return confirm('Delete user {{ user.username }}?')"
+                                   class="text-red-600 hover:text-red-800 font-medium">Delete</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Management Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">📁 Document Management Portal</h1>
+                <p class="text-blue-100 text-sm">Welcome, {{ current_user.username }} ({{ current_user.role }})</p>
+            </div>
+            <div class="flex gap-4">
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('users') }}" class="px-4 py-2 bg-blue-700 rounded-lg hover:bg-blue-800 transition">
+                    👥 Users
+                </a>
+                {% endif %}
+                <a href="{{ url_for('export_csv') }}" class="px-4 py-2 bg-blue-700 rounded-lg hover:bg-blue-800 transition">
+                    📊 Export
+                </a>
+                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-3xl font-bold text-blue-600">{{ stats.total }}</div>
+                <div class="text-gray-600">Total Documents</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-3xl font-bold text-green-600">{{ stats.this_month }}</div>
+                <div class="text-gray-600">This Month</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-3xl font-bold text-purple-600">{{ stats.departments }}</div>
+                <div class="text-gray-600">Departments</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-3xl font-bold text-orange-600">{{ stats.my_docs }}</div>
+                <div class="text-gray-600">My Documents</div>
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="bg-green-100 rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">📤 Upload New Document</h2>
+            <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload') }}">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Document File (PDF)</label>
+                        <input type="file" name="file" accept=".pdf" required
+                               class="w-full px-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Document Type</label>
+                        <select name="doc_type" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option class='bg-gray-100' value="">Select Type</option>
+                            <option class='bg-gray-100' value="Purchase Order">Purchase Order</option>
+                            <option class='bg-gray-100' value="Office Notice">Office Notice</option>
+                            <option class='bg-gray-100' value="Memorandum">Memorandum</option>
+                            <option class='bg-gray-100' value="Policy">Policy</option>
+                            <option class='bg-gray-100' value="SOP">SOP</option>
+                            <option class='bg-gray-100' value="Report">Report</option>
+                            <option class='bg-gray-100' value="SLA">SLA</option>
+                            <option class='bg-gray-100' value="Circular">Circular</option>
+                            <option class='bg-gray-100' value="Miscellaneous">Miscellaneous</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                        <select name="department" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select Department</option>
+                            <option value="HRDD - Human Resource Development Division" {% if current_user.department == 'HRDD - Human Resource Development Division' %}selected{% endif %}>HRDD - Human Resource Development Division</option>
+                            <option value="CAD - Credit Administration Division" {% if current_user.department == 'CAD - Credit Administration Division' %}selected{% endif %}>CAD - Credit Administration Division</option>
+                            <option value="CMS - Chairman Secretariat" {% if current_user.department == 'CMS - Chairman Secretariat' %}selected{% endif %}>CMS - Chairman Secretariat</option>
+                            <option value="CBDT - Capacity Building and Training Cell" {% if current_user.department == 'CBDT - Capacity Building and Training Cell' %}selected{% endif %}>CBDT - Capacity Building and Training Cell</option>
+                            <option value="CRMD - Credit Risk Management Division" {% if current_user.department == 'CRMD - Credit Risk Management Division' %}selected{% endif %}>CRMD - Credit Risk Management Division</option>
+                            <option value="Compliance Division" {% if current_user.department == 'Compliance Division' %}selected{% endif %}>Compliance Division</option>
+                            <option value="Customer Service Division" {% if current_user.department == 'Customer Service Division' %}selected{% endif %}>Customer Service Division</option>
+                            <option value="Digital Banking Division" {% if current_user.department == 'Digital Banking Division' %}selected{% endif %}>Digital Banking Division</option>
+                            <option value="ITD - Information Technology Division" {% if current_user.department == 'ITD - Information Technology Division' %}selected{% endif %}>ITD - Information Technology Division</option>
+                            <option value="FD - Finance Division" {% if current_user.department == 'FD - Finance Division' %}selected{% endif %}>FD - Finance Division</option>
+                            <option value="FID - Financial Inclusion Division" {% if current_user.department == 'FID - Financial Inclusion Division' %}selected{% endif %}>FID - Financial Inclusion Division</option>
+                            <option value="IRMD - Integrated Risk Management Division" {% if current_user.department == 'IRMD - Integrated Risk Management Division' %}selected{% endif %}>IRMD - Integrated Risk Management Division</option>
+                            <option value="Management Advisory and Services Division" {% if current_user.department == 'Management Advisory and Services Division' %}selected{% endif %}>Management Advisory and Services Division</option>
+                            <option value="GAD - General Administration Division" {% if current_user.department == 'GAD - General Administration Division' %}selected{% endif %}>GAD - General Administration Division</option>
+                            <option value="IAD - Inspection And Audit Division" {% if current_user.department == 'IAD - Inspection And Audit Division' %}selected{% endif %}>IAD - Inspection And Audit Division</option>
+                            <option value="SAMD - Special Assets Management Division" {% if current_user.department == 'SAMD - Special Assets Management Division' %}selected{% endif %}>SAMD - Special Assets Management Division</option>
+                            <option value="TMD - Transaction Monitoring Division" {% if current_user.department == 'TMD - Transaction Monitoring Division' %}selected{% endif %}>TMD - Transaction Monitoring Division</option>
+                            <option value="M&ID - Marketing & Insurance Division" {% if current_user.department == 'M&ID - Marketing & Insurance Division' %}selected{% endif %}>M&ID - Marketing & Insurance Division</option>
+                            <option value="Rajbhasha Division" {% if current_user.department == 'Rajbhasha Division' %}selected{% endif %}>Rajbhasha Division</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Document Date</label>
+                        <input type="date" name="doc_date" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                        <textarea name="description" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Brief description of the document"></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Link to Related Documents (Optional)</label>
+                        <select name="linked_docs" multiple size="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            {% for doc in all_documents %}
+                            <option value="{{ doc.id }}">{{ doc.original_filename }} ({{ doc.doc_type }})</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple documents</p>
+                    </div>
+                </div>
+                
+                <button type="submit"
+                        class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                    Upload Document
+                </button>
+            </form>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-blue-100 rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">🔍 Search & Filter</h2>
+            <form method="GET" action="{{ url_for('index') }}" class="grid md:grid-cols-4 gap-4">
+                <input type="text" name="search" value="{{ request.args.get('search', '') }}"
+                       placeholder="Search filename or description"
+                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                
+                <select name="doc_type"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Types</option>
+                    <option value="Purchase Order" {% if request.args.get('doc_type') == 'Purchase Order' %}selected{% endif %}>Purchase Order</option>
+                    <option value="Office Notice" {% if request.args.get('doc_type') == 'Office Notice' %}selected{% endif %}>Office Notice</option>
+                    <option value="Memorandum" {% if request.args.get('doc_type') == 'Memorandum' %}selected{% endif %}>Memorandum</option>
+                    <option value="Policy" {% if request.args.get('doc_type') == 'Policy' %}selected{% endif %}>Policy</option>
+                    <option value="SOP" {% if request.args.get('doc_type') == 'SOP' %}selected{% endif %}>SOP</option>
+                    <option value="Report" {% if request.args.get('doc_type') == 'Report' %}selected{% endif %}>Report</option>
+                    <option value="SLA" {% if request.args.get('doc_type') == 'SLA' %}selected{% endif %}>SLA</option>
+                    <option value="Circular" {% if request.args.get('doc_type') == 'Circular' %}selected{% endif %}>Circular</option>
+                    <option value="Miscellaneous" {% if request.args.get('doc_type') == 'Miscellaneous' %}selected{% endif %}>Miscellaneous</option>
+                </select>
+                
+                <input type="text" name="department" value="{{ request.args.get('department', '') }}"
+                       placeholder="Filter by department"
+                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                
+                <button type="submit"
+                        class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition">
+                    Apply Filters
+                </button>
+            </form>
+        </div>
+
+        <!-- Documents List -->
+        <div class="bg-indigo-100 rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">📋 Documents ({{ documents|length }})</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b-2 border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Filename</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Department</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Doc Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Uploaded By</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Links</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for doc in documents %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm">
+                                <div class="font-medium text-gray-900">{{ doc.original_filename }}</div>
+                                {% if doc.description %}
+                                <div class="text-gray-500 text-xs">{{ doc.description }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                    {{ doc.doc_type }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ doc.department }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ doc.doc_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ doc.uploader.username if doc.uploader else 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                {% set link_count = doc.linked_to|length + doc.linked_from|length %}
+                                {% if link_count > 0 %}
+                                <a href="{{ url_for('view_document', doc_id=doc.id) }}" 
+                                   class="text-purple-600 hover:text-purple-800 font-medium">
+                                    🔗 {{ link_count }} link(s)
+                                </a>
+                                {% else %}
+                                <span class="text-gray-400">No links</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <a href="{{ url_for('view_document', doc_id=doc.id) }}"
+                                   class="text-blue-600 hover:text-blue-800 font-medium mr-2">View</a>
+                                <a href="{{ url_for('download', doc_id=doc.id) }}"
+                                   class="text-green-600 hover:text-green-800 font-medium mr-2">Download</a>
+                                {% if current_user.role == 'admin' or doc.uploaded_by == current_user.id %}
+                                <a href="{{ url_for('delete', doc_id=doc.id) }}"
+                                   onclick="return confirm('Are you sure you want to delete this document?')"
+                                   class="text-red-600 hover:text-red-800 font-medium">Delete</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                No documents found. Upload your first document above!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
