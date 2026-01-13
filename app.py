@@ -138,61 +138,63 @@ def index():
         'my_docs': my_docs
     }
     
-    return render_template("MAIN_TEMPLATE.html", documents=documents, stats=stats, all_documents=all_documents)
+    today_date = datetime.now().date()
+    
+    return render_template("MAIN_TEMPLATE.html", documents=documents, stats=stats, all_documents=all_documents, today_date=today_date)
 
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload():
-    if 'file' not in request.files:
-        flash('No file uploaded', 'error')
-        return redirect(url_for('index'))
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        flash('No file selected', 'error')
-        return redirect(url_for('index'))
-    
-    if not file.filename.lower().endswith('.pdf'):
-        flash('Only PDF files are allowed', 'error')
-        return redirect(url_for('index'))
-    
-    # Save file with unique name
-    original_filename = secure_filename(file.filename)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"{timestamp}_{original_filename}"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
-    
-    # Create database entry
-    doc = Document(
-        filename=filename,
-        original_filename=original_filename,
-        doc_type=request.form['doc_type'],
-        department=request.form['department'],
-        doc_date=datetime.strptime(request.form['doc_date'], '%Y-%m-%d').date(),
-        description=request.form.get('description', ''),
-        uploaded_by=current_user.id
-    )
-    
-    db.session.add(doc)
-    db.session.flush()
-    
-    # Add links to related documents
-    linked_doc_ids = request.form.getlist('linked_docs')
-    for target_id in linked_doc_ids:
-        if target_id:
-            link = DocumentLink(
-                source_doc_id=doc.id,
-                target_doc_id=int(target_id),
-                link_type='related_to'
-            )
-            db.session.add(link)
-    
-    db.session.commit()
-    
-    flash(f'Document "{original_filename}" uploaded successfully!', 'success')
-    return redirect(url_for('index'))
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file uploaded'})
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'})
+        
+        if not file.filename.lower().endswith('.pdf'):
+            return jsonify({'success': False, 'message': 'Only PDF files are allowed'})
+        
+        # Save file with unique name
+        original_filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{original_filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Create database entry
+        doc = Document(
+            filename=filename,
+            original_filename=original_filename,
+            doc_type=request.form['doc_type'],
+            department=request.form['department'],
+            doc_date=datetime.strptime(request.form['doc_date'], '%Y-%m-%d').date(),
+            description=request.form.get('description', ''),
+            uploaded_by=current_user.id
+        )
+        
+        db.session.add(doc)
+        db.session.flush()
+        
+        # Add links to related documents
+        linked_doc_ids = request.form.getlist('linked_docs')
+        for target_id in linked_doc_ids:
+            if target_id:
+                link = DocumentLink(
+                    source_doc_id=doc.id,
+                    target_doc_id=int(target_id),
+                    link_type='related_to'
+                )
+                db.session.add(link)
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'Document "{original_filename}" uploaded successfully!'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Upload failed: ' + str(e)})
 
 @app.route('/document/<int:doc_id>')
 @login_required
@@ -204,18 +206,70 @@ def view_document(doc_id):
 @app.route('/document/<int:doc_id>/add_link', methods=['POST'])
 @login_required
 def add_link(doc_id):
-    target_doc_id = request.form.get('target_doc_id')
-    
-    if target_doc_id:
-        link = DocumentLink(
-            source_doc_id=doc_id,
-            target_doc_id=int(target_doc_id),
-            link_type='related_to'
-        )
-        db.session.add(link)
+    # Accept multiple selected document IDs from the form (name="linked_docs")
+    target_ids = request.form.getlist('linked_docs')
+
+    if target_ids:
+        added = 0
+        for tid in target_ids:
+            if not tid:
+                continue
+            try:
+                t = int(tid)
+            except ValueError:
+                continue
+
+            # Avoid linking to self
+            if t == doc_id:
+                continue
+
+            # Prevent duplicate links
+            exists = DocumentLink.query.filter_by(source_doc_id=doc_id, target_doc_id=t).first()
+            if exists:
+                continue
+
+            link = DocumentLink(
+                source_doc_id=doc_id,
+                target_doc_id=t,
+                link_type='related_to'
+            )
+            db.session.add(link)
+            added += 1
+
+        if added > 0:
+            db.session.commit()
+            flash(f'Added {added} link(s) successfully!', 'success')
+
+    return redirect(url_for('view_document', doc_id=doc_id))
+
+
+@app.route('/document/<int:doc_id>/unlink/<int:link_id>', methods=['POST'])
+@login_required
+def unlink(doc_id, link_id):
+    link = DocumentLink.query.get_or_404(link_id)
+
+    # Ensure the link is associated with this document
+    if link.source_doc_id != doc_id and link.target_doc_id != doc_id:
+        flash('Invalid link', 'error')
+        return redirect(url_for('view_document', doc_id=doc_id))
+
+    # Permission: admins or uploader of either document can unlink
+    source_uploader = link.source_document.uploaded_by if link.source_document else None
+    target_uploader = link.target_document.uploaded_by if link.target_document else None
+    allowed = (current_user.role == 'admin') or (current_user.id in [source_uploader, target_uploader])
+
+    if not allowed:
+        flash('You do not have permission to unlink this document', 'error')
+        return redirect(url_for('view_document', doc_id=doc_id))
+
+    try:
+        db.session.delete(link)
         db.session.commit()
-        flash('Link added successfully!', 'success')
-    
+        flash('Link removed successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Failed to remove link: ' + str(e), 'error')
+
     return redirect(url_for('view_document', doc_id=doc_id))
 
 @app.route('/download/<int:doc_id>')
@@ -354,4 +408,4 @@ def delete_user(user_id):
     return redirect(url_for('users'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port="80")
