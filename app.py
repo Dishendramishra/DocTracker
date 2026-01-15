@@ -385,6 +385,31 @@ def reset_user_password(user_id):
     flash(f'Password for "{user.username}" reset to: {temp_password}', 'success')
     return redirect(url_for('users'))
 
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_pwd = request.form.get('current_password', '')
+        new_pwd = request.form.get('new_password', '')
+        confirm_pwd = request.form.get('confirm_password', '')
+
+        if not check_password_hash(current_user.password_hash, current_pwd):
+            flash('Current password is incorrect.', 'error')
+            return redirect(url_for('change_password'))
+
+        if not new_pwd or new_pwd != confirm_pwd:
+            flash('New passwords do not match or are empty.', 'error')
+            return redirect(url_for('change_password'))
+
+        current_user.password_hash = generate_password_hash(new_pwd)
+        db.session.commit()
+
+        flash('Password changed successfully.', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('CHANGE_PASSWORD_TEMPLATE.html')
+
 @app.route('/users/add', methods=['POST'])
 @login_required
 def add_user():
