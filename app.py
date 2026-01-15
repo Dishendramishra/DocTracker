@@ -5,6 +5,8 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime
+import secrets
+import string
 import os
 import csv
 import io
@@ -357,6 +359,31 @@ def users():
     
     all_users = User.query.order_by(User.created_at.desc()).all()
     return render_template("USERS_TEMPLATE.html", users=all_users)
+
+
+@app.route('/users/reset/<int:user_id>', methods=['POST'])
+@login_required
+def reset_user_password(user_id):
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+
+    user = User.query.get_or_404(user_id)
+
+    if user.id == current_user.id:
+        flash('Cannot reset your own password using admin reset.', 'error')
+        return redirect(url_for('users'))
+
+    # Generate a secure temporary password
+    alphabet = string.ascii_letters + string.digits
+    temp_password = ''.join(secrets.choice(alphabet) for _ in range(10))
+
+    user.password_hash = generate_password_hash(temp_password)
+    db.session.commit()
+
+    # Show the temporary password to the admin so it can be communicated securely
+    flash(f'Password for "{user.username}" reset to: {temp_password}', 'success')
+    return redirect(url_for('users'))
 
 @app.route('/users/add', methods=['POST'])
 @login_required

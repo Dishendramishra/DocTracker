@@ -35,8 +35,29 @@
                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 <input type="password" name="password" required placeholder="Password"
                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <input type="text" name="department" placeholder="Department"
-                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <select name="department"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Department</option>
+                    <option value="HRDD - Human Resource Development Division">HRDD - Human Resource Development Division</option>
+                    <option value="CAD - Credit Administration Division">CAD - Credit Administration Division</option>
+                    <option value="CMS - Chairman Secretariat">CMS - Chairman Secretariat</option>
+                    <option value="CBDT - Capacity Building and Training Cell">CBDT - Capacity Building and Training Cell</option>
+                    <option value="CRMD - Credit Risk Management Division">CRMD - Credit Risk Management Division</option>
+                    <option value="Compliance Division">Compliance Division</option>
+                    <option value="Customer Service Division">Customer Service Division</option>
+                    <option value="Digital Banking Division">Digital Banking Division</option>
+                    <option value="ITD - Information Technology Division">ITD - Information Technology Division</option>
+                    <option value="FD - Finance Division">FD - Finance Division</option>
+                    <option value="FID - Financial Inclusion Division">FID - Financial Inclusion Division</option>
+                    <option value="IRMD - Integrated Risk Management Division">IRMD - Integrated Risk Management Division</option>
+                    <option value="Management Advisory and Services Division">Management Advisory and Services Division</option>
+                    <option value="GAD - General Administration Division">GAD - General Administration Division</option>
+                    <option value="IAD - Inspection And Audit Division">IAD - Inspection And Audit Division</option>
+                    <option value="SAMD - Special Assets Management Division">SAMD - Special Assets Management Division</option>
+                    <option value="TMD - Transaction Monitoring Division">TMD - Transaction Monitoring Division</option>
+                    <option value="M&ID - Marketing & Insurance Division">M&ID - Marketing & Insurance Division</option>
+                    <option value="Rajbhasha Division">Rajbhasha Division</option>
+                </select>
                 <select name="role" required
                         class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="user">User</option>
@@ -77,6 +98,9 @@
                             <td class="px-4 py-3 text-sm text-gray-500">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                             <td class="px-4 py-3 text-sm">
                                 {% if user.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('reset_user_password', user_id=user.id) }}" style="display:inline" onsubmit="return confirm('Reset password for {{ user.username }}?')">
+                                    <button type="submit" class="text-yellow-600 hover:text-yellow-800 font-medium mr-4">Reset Password</button>
+                                </form>
                                 <a href="{{ url_for('delete_user', user_id=user.id) }}"
                                    onclick="return confirm('Delete user {{ user.username }}?')"
                                    class="text-red-600 hover:text-red-800 font-medium">Delete</a>
