@@ -82,7 +82,16 @@
                             <option class='bg-gray-100' value="">Select Type</option>
                             <option class='bg-gray-100' value="Purchase Order">Purchase Order</option>
                             <option class='bg-gray-100' value="Office Notice">Office Notice</option>
+                            <option class='bg-gray-100' value="Office Note">Office Note</option>
+                            <option class='bg-gray-100' value="Payment Note">Payment Note</option>
+                            <option class='bg-gray-100' value="Invoice">Invoice</option>
+                            <option class='bg-gray-100' value="TAF">TAF</option>
                             <option class='bg-gray-100' value="Memorandum">Memorandum</option>
+                            <option class='bg-gray-100' value="Minutes of Committee">Minutes of Committee</option>
+                            <option class='bg-gray-100' value="Board Minutes">Board Minutes</option>
+                            <option class='bg-gray-100' value="Board Approval">Board Approval</option>
+                            <option class='bg-gray-100' value="Email Communication">Email Communication</option>
+                            <option class='bg-gray-100' value="Letter">Letter</option>
                             <option class='bg-gray-100' value="Policy">Policy</option>
                             <option class='bg-gray-100' value="SOP">SOP</option>
                             <option class='bg-gray-100' value="Report">Report</option>
@@ -163,7 +172,16 @@
                     <option value="">All Types</option>
                     <option value="Purchase Order" {% if request.args.get('doc_type') == 'Purchase Order' %}selected{% endif %}>Purchase Order</option>
                     <option value="Office Notice" {% if request.args.get('doc_type') == 'Office Notice' %}selected{% endif %}>Office Notice</option>
+                    <option value="Office Note" {% if request.args.get('doc_type') == 'Office Note' %}selected{% endif %}>Office Note</option>
+                    <option value="Payment Note" {% if request.args.get('doc_type') == 'Payment Note' %}selected{% endif %}>Payment Note</option>
+                    <option value="Invoice" {% if request.args.get('doc_type') == 'Invoice' %}selected{% endif %}>Invoice</option>
+                    <option value="TAF" {% if request.args.get('doc_type') == 'TAF' %}selected{% endif %}>TAF</option>
                     <option value="Memorandum" {% if request.args.get('doc_type') == 'Memorandum' %}selected{% endif %}>Memorandum</option>
+                    <option value="Minutes of Committee" {% if request.args.get('doc_type') == 'Minutes of Committee' %}selected{% endif %}>Minutes of Committee</option>
+                    <option value="Board Minutes" {% if request.args.get('doc_type') == 'Board Minutes' %}selected{% endif %}>Board Minutes</option>
+                    <option value="Board Approval" {% if request.args.get('doc_type') == 'Board Approval' %}selected{% endif %}>Board Approval</option>
+                    <option value="Email Communication" {% if request.args.get('doc_type') == 'Email Communication' %}selected{% endif %}>Email Communication</option>
+                    <option value="Letter" {% if request.args.get('doc_type') == 'Letter' %}selected{% endif %}>Letter</option>
                     <option value="Policy" {% if request.args.get('doc_type') == 'Policy' %}selected{% endif %}>Policy</option>
                     <option value="SOP" {% if request.args.get('doc_type') == 'SOP' %}selected{% endif %}>SOP</option>
                     <option value="Report" {% if request.args.get('doc_type') == 'Report' %}selected{% endif %}>Report</option>
