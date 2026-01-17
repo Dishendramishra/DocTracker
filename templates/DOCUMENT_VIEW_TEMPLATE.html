@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ document.original_filename }} - Document Portal</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/select2.min.css') }}">
     <script src="{{ url_for('static', filename='js/tailwind-cdn.js') }}"></script>
     <script src="{{ url_for('static', filename='js/flowbite.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
 </head>
 <body class="bg-gray-50">
     <nav class="bg-blue-600 text-white shadow-lg">
@@ -148,7 +149,6 @@
             </div>
         </div>
     </div>
-            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
             <script>
                 $(document).ready(function() {
                     $('#linked_docs_add').select2({
